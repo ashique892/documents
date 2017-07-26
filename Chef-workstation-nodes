@@ -1,0 +1,66 @@
+
+
+Chef-Workstation
+----------------
+
+Hostname :  workstation.example.com
+IP-      :  192.168.122.150
+
+
+Step-1  = Install chef development kit rpm.
+#rpm -ivh chefdk-0.14.25-1.el6.x86_64.rpm
+
+Step-2  = Execute command
+#chef verify
+
+Step-3 = Copy user and organisations pem file into .chef directory.
+#mkdir ~/.chef
+
+Perform the scp from chef server
+
+#ls ~/.chef
+ashiq1.pem   linux-validator.pem
+
+#knife configure -i
+
+[root@work12 .chef]# knife configure -i
+WARNING: No knife configuration file found
+Where should I put the config file? [/root/.chef/knife.rb] 
+Please enter the chef server URL: [https://work12.example.com:443] https://serv12.example.com/organizations/linuxsv 
+Please enter a name for the new user: [root] ashiq1
+Please enter the existing admin name: [admin] 
+Please enter the location of the existing admin's private key: [/etc/chef-server/admin.pem] /root/.chef/ashiq1.pem
+Please enter the validation clientname: [chef-validator]       
+Please enter the location of the validation key: [/etc/chef-server/chef-validator.pem] /root/.chef/linuxsv-validator.pem
+Please enter the path to a chef repository (or leave blank): 
+Creating initial API user...
+Please enter a password for the new user:
+
+ Downloading The knife.rb files and pem file from Web-GUI console.
+-----------------------------------------------------------
+
+Go to Adminstration Tab and select the organization. here "Generate Knife Config" and "Reset Validation Key" also download the user pem key from users Tab.
+
+Also we can download all the file from Chef-Starter Kit. once you download the file you can unzip and place to your worksttion machine
+ 
+
+#knife ssl check  = will get warning message. it is problem of server certificated. to fixing the issue
+
+#knife ssl fetch  = it will create trusted_certificate directory and will pull the server certificate.
+
+#knife node list  = list the Nodes.
+
+
+
+Adding Nodes 
+------------
+
+
+#knife bootstrap node1.example.com -x root -P redhat
+
+
+from workstation 
+
+#knife node list
+
+

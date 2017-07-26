@@ -1,0 +1,243 @@
+
+
+    user:     Manage users on the node
+    group:    Manage groups
+    file:     Manage contents of a file on node
+    directory: Manage directories on node
+    link  :   Creating hard/soft links        
+    package:  Used to manage packages on a node
+    service:  Used to manage services on a node
+    template: Manage files with embedded ruby templates
+    cookbook_file: Transfer files from the files subdirectory in the cookbook to a location on the node
+    execute:   Execute a command on the node
+    remote_files :---
+    cron:      Edit an existing cron file on the node
+
+group Creation
+---------------
+group "system-admins" do
+    gid 1001
+    action :create    = Default, creating a group
+           :remove    = Removeing Group
+	   :manage    = Managing the group
+	   :modify    = modify existing group   
+   members 'ashiq'    = To adding user into a group
+   members ['member1','member2','member3']   = Adding Multiple users 
+ 
+  Note: For Adding new user into the group
+  
+   append  true
+   members 'ashiq'   = it will add in the group
+
+  excluded_members  'ashiq'  = it will delete the user from group (it is available after 11.10 chef version)
+ 
+end
+ 
+
+User Creation
+-------------
+
+user "oracle" do
+        comment "Sanjay User"
+	shell "/bin/bash"
+	home "/home/sanjay"
+	gid "system-admins"
+	uid 1002
+	supports :manage_home => true
+	password "$1$QwuUa80Z$KZkYq8CqICVyIsK1tHZ7s0"
+end
+
+ action :---
+
+ :create =  Default. Create a user with given properties. If a user already exists (but does not match), update that user to match.
+ :remove = Remove a user.
+ :manage = Manage an existing user. This action does nothing if the user does not exist.
+ :modify = Modify an existing user. This action raises an exception if the user does not exist.
+ :nothing = Define this resource block to do nothing until notified by another resource to take action. When this resource is notified, this resource block is either run immediately or it is queued up to be run at the end of the chef-client run.lling Pac=kages
+ 
+ :lock   = Lock a user’s password.
+ :unlock = Unlock a user’s password. 
+
+Creating A File with content
+---------------------------
+
+file 'hello.txt' do	     = file name it will create our PWD 
+  content 'Welcome to Chef'  = Contents
+  action :delete             = deleting the file
+  	 :create	     = Default
+         :create_if_missing  = it will create file if not exist
+  path  '/var/ashiq'	     = File will create here or we can mentioned on first line
+  mode  '0755'		     = Permission 		
+  owner 'user1' 	     = User Owner
+  group 'user1'	             = Group owner
+  backup		     = Has to check
+end
+ 
+
+Creating Directory
+-------------------
+
+directory "/srv/www/" do
+  mode 0755
+  owner 'root'
+  group 'root'
+  recursive true    == Creating recursive directories
+  action :create
+end
+
+
+Link File 
+--------------
+
+
+Use the link resource to create symbolic or hard links.
+
+A symbolic link—sometimes referred to as a soft link—is a directory entry that associates a file name with a string that contains an absolute or relative path to a file on any file system. In other words, “a file that contains a path that points to another file.” A symbolic link creates a new file with a new inode that points to the inode location of the original file.
+
+A hard link is a directory entry that associates a file with another file in the same file system. In other words, “multiple directory entries to the same file.” A hard link creates a new file that points to the same inode as the original file.
+
+A link resource block creates symbolic or hard links. For example, to create a hard link from /tmp/file to /etc/file:
+
+link '/tmp/file' do
+  to '/etc/file'     = This is the source file
+  link_type :hard         
+            :symbolic
+end
+
+Delete links
+
+The following example will delete the /tmp/file symbolic link and uses the only_if guard to run the test -L command, which verifies that /tmp/file is a symbolic link, and then only deletes /tmp/file if the test passes:
+
+link '/tmp/file' do
+  action :delete
+  only_if 'test -L /tmp/file'
+end
+
+
+
+
+
+
+Installing Packages 
+-----------------------
+
+package 'sendmail' do      OR   Package 'sendmail'  (by default it will install)
+        action :install
+     end
+
+ Multiple packages
+
+package ['package1', 'package2]'
+   action :upgrade     = Upgrading the packages
+          :remove      = Removing Packages
+      OR  :purge 
+         
+ version '1.16.1-1'    = install the version
+ 
+COnditonal installation =
+
+  package 'Installing apache' do
+     case node[:platform]
+     when 'redhat', 'centos'
+       package_name 'httpd'
+     when 'ubuntu', 'debian'
+       package_name 'apache2'
+     end
+ end
+
+
+Managing Services
+------------------
+
+service 'sendmail' do
+        action [ :enable,:start ]
+     end
+
+
+
+
+
+
+
+Managing Remote files
+-----------------------
+
+Use the cookbook_file resource to transfer files from a sub-directory of COOKBOOK_NAME/files/ to a specified path located on a host that is running the chef-client
+
+ cookbook_file: Transfer files from the files subdirectory in the cookbook to a location on the node
+
+cookbook_file '/var/www/html/index.html' do
+    source  'index.html'      = These files has to create under files/default directory.
+    owner 'web_admin'
+    group 'web_admin'
+    mode '0755'
+    action :create
+           :delete   = deleting the file from remote path
+end
+
+
+
+Managing Configuration files  (template)
+---------------------------
+
+A cookbook template is an Embedded Ruby (ERB) template that is used to dynamically generate static text files. 
+
+template 'httpd.conf' do
+  path '/etc/httpd/conf/httpd.conf'
+  local 'true'      = Allowing template file from local path  eg: /tmp/test.erb
+  source 'motd.erb'
+  owner 'root'
+  group 'root'
+  mode '0755'
+  variable   =  Need to check
+end
+
+
+
+Remote_files
+---------------
+  
+Use the remote_file resource to transfer a file from a remote location using file specificity. This resource is similar to the file resource.
+
+
+remote_file '/var/www/customers/public_html/index.php' do
+  source 'http://somesite.com/index.php'
+  owner 'web_admin'
+  group 'web_admin'
+  mode '0755'
+  action :create
+end
+
+
+
+Mounting File system
+-------------------
+Use the mount resource to manage a mounted file system.
+
+mount node['mysql']['ec2_path'] do
+  device ebs_vol_dev
+  fstype 'xfs'
+  action :mount
+end
+
+Actions:-
+
+This resource hsas the following actions:
+
+:disable  =  Remove an entry from the file systems table (fstab).
+:enable   =  Add an entry to the file systems table (fstab).
+:mount    =  Default. Mount a device.
+:nothing  =  Define this resource block to do nothing until notified by another resource to take action. When this resource is notified, this resource block is either run immediately or it is queued up to be run at the end of the chef-client run.
+:remount  =  Remount a device.
+:umount   =  Unmount a device. 
+
+Mount a local block drive
+------------------------
+mount '/mnt/local' do
+  device '/dev/sdb1'
+  fstype 'ext3'
+  action [:mount, :enable]
+end
+
+
+

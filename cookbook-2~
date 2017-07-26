@@ -1,0 +1,125 @@
+Part 3: Understanding Chef Cookbook/Recipe.
+
+
+
+I) Extending existing Cookbook (cookbook-test) and configure a recipe for deploying Packages.
+1) Login to Workstation node which have knife configured.
+2) Lets say you have not yet install sendmail on your system, check it out using following command:
+
+   # rpm -qa | grep -v grep | grep -i sendmail
+
+
+Note: In case if sendmail is installed and you want to delete it please refer to my rpm page.
+
+3) Now lets create a recipe for a sendmail package.
+
+   # vim /usr/local/src/chef/cookbooks/cookbook-test/recipes/sendmail.rb
+     package 'sendmail' do
+        action :install
+     end
+
+4) To upload a cookbook (cookbook-test) use following command:
+
+   # knife upload cookbooks cookbook-test
+
+5) Once we have upload the cookbook, now is the time to associate it with a Node using “run_list” Knife option:
+
+   # knife node run_list add node1.example.com recipe[cookbook-test::sendmail]
+     node1.example.com:
+       run_list:
+         recipe[cookbook-test]
+         recipe[cookbook-test::sendmail]
+
+6) Now login to machine “node1.example.com” and run the following command:
+
+   # chef-client
+     Starting Chef Client, version 11.6.2
+     [2013-10-25T22:05:20-07:00] INFO: *** Chef 11.6.2 ***
+     [2013-10-25T22:05:22-07:00] INFO: Run List is 
+, recipe[cookbook-test::sendmail]]
+     [2013-10-25T22:05:22-07:00] INFO: Run List expands to [cookbook-test, cookbook-test::sendmail]
+     [2013-10-25T22:05:22-07:00] INFO: Starting Chef Run for node1.example.com
+     [2013-10-25T22:05:22-07:00] INFO: Running start handlers
+     [2013-10-25T22:05:22-07:00] INFO: Start handlers complete.
+     resolving cookbooks for run list: ["cookbook-test", "cookbook-test::sendmail"]
+     [2013-10-25T22:05:22-07:00] INFO: Loading cookbooks [cookbook-test]
+     Synchronizing Cookbooks:
+     [2013-10-25T22:05:22-07:00] INFO: Storing updated cookbooks/cookbook-test/recipes/default.rb in the cache.
+       - cookbook-test
+     Compiling Cookbooks...
+     Converging 3 resources
+     Recipe: cookbook-test::default
+       * group[system-admins] action create[2013-10-25T22:05:22-07:00] INFO: Processing group[system-admins] action create (cookbook-test::default line 9)
+      (up to date)
+       * user[sachin] action create[2013-10-25T22:05:22-07:00] INFO: Processing user[sachin] action create (cookbook-test::default line 13)
+      (up to date)
+    Recipe: cookbook-test::sendmail
+       * package[sendmail] action install[2013-10-25T22:05:22-07:00] INFO: Processing package[sendmail] action install (cookbook-test::sendmail line 1)
+     [2013-10-25T22:06:14-07:00] INFO: package[sendmail] installing sendmail-8.14.4-8.el6 from base repository
+
+         - install version 8.14.4-8.el6 of package sendmail
+
+     [2013-10-25T22:06:28-07:00] INFO: Chef Run complete in 66.492800835 seconds
+     [2013-10-25T22:06:28-07:00] INFO: Running report handlers
+     [2013-10-25T22:06:28-07:00] INFO: Report handlers complete
+     Chef Client finished, 1 resources updated
+
+7) Check the sendmail rpm is installed on the system.
+
+   # rpm -qa | grep -i send
+     sendmail-8.14.4-8.el6.x86_64
+
+II) Now update the recipe to start the service after installing the sendmail package.
+1) Login to Workstation node which have knife configured.
+2) Edit the recipe file as per following rule:
+
+   # vim /usr/local/src/chef/cookbooks/cookbook-test/recipes/sendmail.rb
+     package 'sendmail' do
+        action :install
+     end
+
+     service 'sendmail' do
+        action [ :enable,:start ]
+     end
+
+3) To upload a cookbook (cookbook-test) use following command:
+
+   # knife upload cookbooks cookbook-test
+
+4) Now login to machine “node1.example.com” and run the following command and check the output of this command:
+
+   # chef-client
+     Recipe: system-users::sendmail
+       * package[sendmail] action install[2013-10-28T04:12:05-07:00] INFO: Processing package[sendmail] action install (system-users::sendmail line 1)
+      (up to date)
+       * service[sendmail] action enable[2013-10-28T04:12:10-07:00] INFO: Processing service[sendmail] action enable (system-users::sendmail line 5)
+      (up to date)
+       * service[sendmail] action start[2013-10-28T04:12:11-07:00] INFO: Processing service[sendmail] action start (system-users::sendmail line 5)
+     [2013-10-28T04:12:11-07:00] INFO: service[sendmail] started
+
+         - start service service[sendmail]
+
+
+NOTE: Please check the comment marked in red.
+
+III) Now update the recipe to delete the sendmail package.
+1) Login to Workstation node which have knife configured.
+2) Edit the recipe file as per following rule:
+
+   # vim /usr/local/src/chef/cookbooks/cookbook-test/recipes/sendmail.rb
+     package 'sendmail' do
+        action :remove
+     end
+
+3) To upload a cookbook (cookbook-test) use following command:
+
+   # knife upload cookbooks cookbook-test
+
+4) Now login to machine “node1.example.com” and run the following command and check the output of this command:
+
+   # chef-client
+     Recipe: system-users::sendmail
+       * package[sendmail] action remove[2013-10-28T04:16:59-07:00] INFO: Processing package[sendmail] action remove (system-users::sendmail line 1)
+     [2013-10-28T04:17:09-07:00] INFO: package[sendmail] removed
+
+         - remove  package sendmail

@@ -1,0 +1,79 @@
+Creating Hosted Chef-server and it`s setup.
+
+
+Step -1
+
+Login - https://manage.chef.io/signup/  and fill up the information
+
+After you sign up, you'll receive an email to confirm your account. Click the link in that email to verify your account and set your password.
+
+After login Need to create organisation. as per below.
+
+
+  1-  Click Create New Organization.
+  2-  Enter a full name and short name for your organization. An organization is typically a company name or a department within a company. These names can be whatever you want but the short name must be unique.
+  3- Click Create Organization.
+
+After creating create a workstation machine and setup .chef directory for managing knife command.
+knife enables you to upload your cookbooks to the Chef server and work with nodes, the servers that you manage.
+
+knife requires two files to authenticate with the Chef server.
+
+1) RSA private key
+
+Every request to the Chef server is authenticated through an RSA public key pair. The Chef server holds the public part; you hold the private part.
+
+2) a knife configuration file
+
+The configuration file is typically named knife.rb. It contains information such as the Chef server's URL, the location of your RSA private key, and the default location of your cookbooks.
+
+Both of these files are typically located in a directory named .chef. By default, every time knife runs, it looks in the current working directory for the .chef directory. If the .chef directory does not exist, knife searches up the directory tree for a .chef directory. This process is similar to how tools such as Git work.
+
+Create the ~/learn-chef/.chef directory, like this. You'll add your RSA private key and knife configuration files in the next steps.
+
+
+
+Generate your knife configuration file
+---------------------------------------
+
+Here's how to create your knife configuration file. Your file will be located at ~/learn-chef/.chef/knife.rb.
+
+   1-  Sign in to https://manage.chef.io/login.
+   2-  From the Administration tab, select your organization.
+   3-  From the menu on the left, select Generate Knife Config and save the file.
+
+ Afet creating the knife.rb file and it placed on your workstations~/learn-chef/.chef 
+
+
+generate Your RSA Private Key.
+---------------------------------
+Here's how to create your RSA private key. Your file will be located at ~/learn-chef/.chef/<username>.pem, where <username> is the name you chose when you created your hosted Chef account.
+
+
+   1- Sign in to https://manage.chef.io/.
+   2- From the Administration tab, select Users from the menu on the left.
+   3- Select your user name, select Reset key from the menu on the left.
+
+Copy and paste the username.pem key to your .chef directory. after that it will looking like this.
+ 
+[root@node1 .chef]# ls ~/learn-chef/.chef/ -l
+total 8
+-rw-r--r--. 1 root root 1675 May 30 18:12 ashique892.pem
+-rwxr--r--. 1 root root  426 May 30 18:02 knife.rb
+[root@node1 .chef]# 
+
+After that.
+
+[root@node1 .chef]# knife ssl check
+Connecting to host api.chef.io:443
+Successfully verified certificates from `api.chef.io'
+[root@node1 .chef]# 
+
+
+Creating the cookbook and clone from github.
+
+#mkdir ~/learn-chef/cookbooks
+#cd ~/learn-chef/cookbooks
+#git clone https://github.com/learn-chef/learn_chef_httpd.git
+
+

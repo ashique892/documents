@@ -1,0 +1,107 @@
+What is Chef?
+Chef is a Ruby-based configuration management engine. It acts as a hub, ensuring that the right cookbooks are used, that the right policies are applied, that all of the node objects are up-to-date, and that all of the nodes that will be maintained are registered and known to the Chef Server. The Chef Server distributes configuration details (such as recipes, templates, and file distributions) to every node within the organization. Chef then does as much of the configuration work as possible on the nodes themselves (and not on the Chef Server). This scalable approach distributes the configuration effort throughout the organization.
+
+Chef Server:
+-------------
+
+The server acts as a hub for configuration data. The server stores cookbooks, the policies that are applied to nodes, and metadata that describes each registered node that is being managed by the chef-client. Nodes use the chef-client to ask the server for configuration details, such as recipes, templates, and file distributions. Starting with the release of Chef 11.x, the front-end for the server is written using Erlang.
+
+  * store cookbooks recipies policies, run lists that are applied on nodes.
+  * chef nodes talk to chef server using chef client.
+
+
+Workstations:
+-------------
+
+A workstation is a computer that is configured to run Knife, to synchronize with the chef-repo, and interact with a single server. The workstation is the location from which most users will do most of their work, including:
+
+ * chef workstation is the machine where chef admin will work.
+
+ * create recipies, cookbook ,roles environments using knife commands.
+
+ * Test and upload the recipies cookbooks to the chef server.
+ 
+ * Chef nodes cannot directly communicates with chef workstation.
+
+    Developing cookbooks and recipes (and authoring them using Ruby).
+    Keeping the chef-repo synchronized with version source control.
+    Using Knife to upload items from the chef-repo to the server.
+    Configuring organizational policy, includeing defining roles and       environments and ensuring that critical data is stored in data bags.
+    Interacting with nodes, as (or when) required, such as performing a bootstrap operation. 
+
+Node:
+----
+A node is any server or virtual server that is configured to be maintained by a chef-client. A node can be any physical, virtual, or cloud machine that can run the chef-client. A chef-client is an agent that runs locally on every node that is registered with the server. When a chef-client is run, it will perform all of the steps that are required to bring the node into the expected state, including:
+
+    Registering and authenticating the node with the server.
+    Building the node object.
+    Synchronizing cookbooks.
+    Compiling the resource collection by loading each of the required cookbooks, including recipes, attributes, and all other dependencies.
+    Taking the appropriate and required actions to configure the node.
+    Looking for exceptions and notifications, handling each as required. 
+
+RSA public key-pairs are used to authenticate the chef-client with the server every time a chef-client needs access to data that is stored on the server. This prevents any node from accessing data that it shouldn’t and it ensures that only nodes that are properly registered with the server can be managed.
+
+I) Prerequisite
+1) Host should have fully configured hostname.
+2) Should have DNS entry in place.
+3) Following package are required.
+
+
+
+Server Installation:-
+--------------------
+
+Step-1
+#rpm -ivh chef-server-core-12.6.0-1.el6.x86_64.rpm
+
+Step-2 
+#chef-server-ctl reconfigure
+
+Step-3
+#rpm -ivh chef-manage-2.3.0-1.el6.x86_64     = Chef-Manage is using to manage chef server via Web Gui mode
+
+OR if you have internet connection.
+
+execute #chef-server-ctl install chef-manage
+       
+Step-4
+
+#chef-server-ctl reconfigure
+
+#opscode-manage-ctl reconfigure  OR
+#chef-manage-ctl reconfigure 
+
+Installation part is done.
+
+
+Step-5 = User creation. For accessing this chef server need to create admin user on chef server.
+
+Synx = # chef-server-ctl user-create username FirstName Lastname mailaddress password  
+eg   = # chef-server-ctl user-create ashiq Muhammed Ashique ashique892@gmail.com 'ashiq892' -f /root/ashiq.pem
+
+Login the chef server using this credential and create a new organization. 
+You can explore the Chef Server URL using your favorite browser:
+
+   # https://FQDN-OR-IP-OF-CHEF-SERVER
+
+Note:- Also we can create organization using command line:
+
+#chef-server-ctl org-create organzationname  Detailed Name
+#chef-server-ctl org-create testorg 'Testing Organisation' --association_user ashique -f testorg-validator.pem
+
+
+To Listing organisations:
+
+#chef-server-ctl org-show  OR #chef-server-ctl org-list
+
+#chef-server-ctl user-list  = To listing Users
+
+
+
+
+
+
+
+
+

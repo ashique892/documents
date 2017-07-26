@@ -1,0 +1,394 @@
+
+
+What is a Cookbook?
+-------------------
+A cookbook is the fundamental unit of configuration and policy distribution. Each cookbook defines a scenario, such as everything needed to install and configure MySQL, and then it contains all of the components that are required to support that scenario.
+
+A COOKBOOK IS LIKE A PACKAGE FOR CHEF RECIPIES.
+
+  * It contain all the recipies, files,templates, libraries required ti configure a portion of youe infrastructre.
+  * ypicallu theu map a piece of software or functionality.
+
+
+
+What is a Recipe?
+-----------------
+Recipe files are Ruby applications that define everything that is required to configure a system, including creating and configuring folders, installing and configuring packages, starting services, and so on. A recipe is a subset or “piece” of a cookbook
+
+What is a Attribute?
+Attributes files contain a set of attributes that represent values to be used by the recipes and templates.
+For example, the built-in cookbook for the Rails App Server layer includes an attributes file with values for the Rails version, the application server stack, and so on.
+
+What is Template?
+Template files are templates that recipes use to create other files, such as configuration files.
+Template files typically let you modify the configuration file by overriding attributes—which can be done without touching the cookbook—instead of rewriting a configuration file. The standard practice is that whenever you expect to change a configuration file on an instance even slightly, you should use a template file.
+
+What is Databags?
+A data bag is a global variable that is stored as JSON data and is accessible from a server. A data bag is indexed for searching and can be loaded by a recipe or accessed during a search. The contents of a data bag can vary, but they often include sensitive information (such as database passwords).
+
+What is knife?
+Knife is a command-line tool that provides an interface between a local chef-repo and the server. Knife helps users to manage nodes, cookbook, recipes, roles etc.
+
+
+--------------------------------
+Simple Recipies Testing
+--------------------------------
+
+Open Workstation machine.
+
+   create sample file like below.
+
+ #vim hello.rb
+
+file 'hello.txt' do
+  content 'Welcome to Chef' 
+end
+
+:wq!
+
+#chef-apply hello.rb
+
+here the hellow file will create in your present working directory.
+
+=To mentioning Home directories
+
+file '{ENV ['HOME']}/love.txt" do
+  content "Hi Chef "
+end
+
+
+
+action :delete
+
+
+https://www.digitalocean.com/community/tutorials/how-to-create-simple-chef-cookbooks-to-manage-infrastructure-on-ubuntu
+  
+=========================================================================================================================
+
+  How Chef Will work
+ --------------------
+
+1- Before chef perform any action, It refer to the resource and attributes in a recipie to answer :
+  
+  "What do I care about?"
+
+2- Chef uses DSL (domain specific language)  
+  
+  DSL is desighned to make you focus more on describing "What" the configuration should be rather than "how" it should be done.
+
+=============================================================================================================================
+ 
+
+Demonstration
+----------------
+
+Steps to create a Sample Cookbook and configure a recipe
+
+1) Login to Workstation node which have knife configured.
+Adding the following line to create cookbook repo that can be uploaded to git (for version control).
+
+  
+  # knife cookbook create ashiq   -- by default it will create a cookbook directories under /var/chef/cookbooks/NAME-OF-COOKBOOK 
+
+For creating custumized cookbook on specific directory
+
+  # vi /root/.chef/knife.rb
+      cookbook_path [ '/usr/local/src/chef/cookbooks' ]
+
+Create the cookbook directory.
+
+   # mkdir -p /usr/local/src/chef/cookbooks
+
+Now lets create sample cookbook to push users to Chef Nodes:
+
+   # knife cookbook create ashiq
+
+Navigate to cookbook directory and you will see the following structure got created.
+
+   # cd /usr/local/src/chef/cookbooks
+   # tree cookbook-test
+	cookbook-test/
+	├── attributes
+	├── CHANGELOG.md
+	├── definitions
+	├── files
+	│   └── default
+	├── libraries
+	├── metadata.rb
+	├── providers
+	├── README.md
+	├── recipes
+	│   └── default.rb
+	├── resources
+	└── templates
+		└── default
+
+5) Before creating the recipe lets generate the password for the new user using the following commands.
+
+   # openssl passwd -1 "theplaintextpassword"
+
+6) Now lets create a recipe for a new group (system-admins) and user by the name “sanjay”.
+
+   # cat /usr/local/src/chef/cookbooks/ashiq/recipes/default.rb
+	#
+	# Cookbook Name:: cookbook-test
+	# Recipe:: default
+	#
+	# Copyright 2013, YOUR_COMPANY_NAME
+	#
+	# All rights reserved - Do Not Redistribute
+	#
+	group "system-admins" do
+                gid 1001
+        end
+	user "sanjay" do
+		comment "Sanjay User"
+		shell "/bin/bash"
+		home "/home/sanjay"
+		gid "system-admins"
+		uid 1002
+		supports :manage_home => true
+		password "$1$QwuUa80Z$KZkYq8CqICVyIsK1tHZ7s0"
+	end
+
+======================
+Creating cookbook
+======================
+
+#knife cookbook create simple  OR
+
+#chef generate cookbook simple
+
+#
+
+
+Note: Please check the Group resource and User resource page for more info.
+
+
+   #knife cookbook test ashiq   ==  To verify the syntzx of cookbook
+
+   #knife upload cookbooks ashiq  OR  == To upload a single cookbook   
+   #knife cookbook upload ashiq
+   
+   #knife upload cookbooks == To upload the cookbooks/directory to the server, browse to the top level of the chef-repo and enter
+   				(This will upload all the cookbook.)
+   #knife cookbook list   == To Listing Available cookbooks
+
+   #knife cookbook delete ashiq  == To delteting cookbook
+
+
+
+Node Commands
+--------------
+
+ A node is any machine—physical, virtual, cloud, network device, etc.—that is under management by Chef.
+The knife node subcommand is used to manage the nodes that exist on a Chef server.
+
+  Once we have upload the cookbook, now is the time to associate it with a Node using “run_list” Knife option:
+
+   # knife node lis
+     node1.example.com
+     node2.example.com
+     node3.example.com
+
+   #  knife node run_list add node1.example.com cookbook-test
+      node1.example.com:
+        run_list: recipe[cookbook-test]
+
+9) Now login to machine “node1.example.com” and run the following command:
+
+   # chef-client
+     [2013-10-25T04:47:36-07:00] INFO: Forking chef instance to converge...
+     Starting Chef Client, version 11.6.2
+     [2013-10-25T04:47:36-07:00] INFO: *** Chef 11.6.2 ***
+     [2013-10-25T04:47:37-07:00] INFO: Run List is 
+]
+     [2013-10-25T04:47:37-07:00] INFO: Run List expands to [cookbook-test]
+     [2013-10-25T04:47:37-07:00] INFO: Starting Chef Run for node1.example.com
+     [2013-10-25T04:47:37-07:00] INFO: Running start handlers
+     [2013-10-25T04:47:37-07:00] INFO: Start handlers complete.
+     resolving cookbooks for run list: ["cookbook-test"]
+     [2013-10-25T04:47:37-07:00] INFO: Loading cookbooks [cookbook-test]
+     Synchronizing Cookbooks:
+     [2013-10-25T04:47:37-07:00] INFO: Storing updated cookbooks/cookbook-test/recipes/default.rb in the cache.
+     [2013-10-25T04:47:37-07:00] INFO: Storing updated cookbooks/cookbook-test/metadata.rb in the cache.
+     [2013-10-25T04:47:37-07:00] INFO: Storing updated cookbooks/cookbook-test/README.md in the cache.
+     [2013-10-25T04:47:37-07:00] INFO: Storing updated cookbooks/cookbook-test/CHANGELOG.md in the cache.
+       - cookbook-test
+     Compiling Cookbooks...
+     Converging 1 resources
+     Recipe: cookbook-test::default
+	   * group[system-admins] action create[2013-10-25T22:23:38-07:00] INFO: Processing group[system-admins] action create (cookbook-test::default line 9)
+       (up to date)
+       * user[sanjay] action create[2013-10-25T04:47:37-07:00] INFO: Processing user[sanjay] action create (cookbook-test::default line 9)
+       (up to date)
+     [2013-10-25T04:47:37-07:00] INFO: Chef Run complete in 0.48225768 seconds
+     [2013-10-25T04:47:37-07:00] INFO: Running report handlers
+     [2013-10-25T04:47:37-07:00] INFO: Report handlers complete
+     Chef Client finished, 0 resources updated
+
+
+Note: Please check the Knife node run_list page for more info.
+
+9) Try to check the user got created using following command:
+
+   # su - sanjay
+   $ id
+     uid=1002(sanjay) gid=1001(system-admins) groups=1001(system-admins) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+   $ whoami
+     sanjay
+   $ pwd
+     /home/sanjay
+
+
+
+
+
+BootStarp
+---------
+  Once the workstation machine is configured, it can be used to install the chef-client on one (or more) nodes across the organization using a knife bootstrap operation. The knife bootstrap command is used to SSH into the target machine, and then do what is needed to allow the chef-client to run on the node.
+
+A node is any physical, virtual, or cloud machine that is configured to be maintained by a chef-client. A bootstrap is a process that installs the chef-client on a target system so that it can run as a chef-client and communicate with a Chef server. There are two ways to do this.
+
+
+
+
+
+
+
+
+ERROR: RuntimeError: Please set EDITOR environment variable
+
+
+export EDITOR=$(which vi)
+
+
+
+-================================================
+
+Part 3: Understanding Chef Cookbook/Recipe.
+
+
+
+I) Extending existing Cookbook (cookbook-test) and configure a recipe for deploying Packages.
+1) Login to Workstation node which have knife configured.
+2) Lets say you have not yet install sendmail on your system, check it out using following command:
+
+   # rpm -qa | grep -v grep | grep -i sendmail
+
+
+Note: In case if sendmail is installed and you want to delete it please refer to my rpm page.
+
+3) Now lets create a recipe for a sendmail package.
+
+   # vim /usr/local/src/chef/cookbooks/cookbook-test/recipes/sendmail.rb
+     package 'sendmail' do
+        action :install
+     end
+
+4) To upload a cookbook (cookbook-test) use following command:
+
+   # knife upload cookbooks cookbook-test
+
+5) Once we have upload the cookbook, now is the time to associate it with a Node using “run_list” Knife option:
+
+   # knife node run_list add node1.example.com recipe[cookbook-test::sendmail]
+     node1.example.com:
+       run_list:
+         recipe[cookbook-test]
+         recipe[cookbook-test::sendmail]
+
+6) Now login to machine “node1.example.com” and run the following command:
+
+   # chef-client
+     Starting Chef Client, version 11.6.2
+     [2013-10-25T22:05:20-07:00] INFO: *** Chef 11.6.2 ***
+     [2013-10-25T22:05:22-07:00] INFO: Run List is 
+, recipe[cookbook-test::sendmail]]
+     [2013-10-25T22:05:22-07:00] INFO: Run List expands to [cookbook-test, cookbook-test::sendmail]
+     [2013-10-25T22:05:22-07:00] INFO: Starting Chef Run for node1.example.com
+     [2013-10-25T22:05:22-07:00] INFO: Running start handlers
+     [2013-10-25T22:05:22-07:00] INFO: Start handlers complete.
+     resolving cookbooks for run list: ["cookbook-test", "cookbook-test::sendmail"]
+     [2013-10-25T22:05:22-07:00] INFO: Loading cookbooks [cookbook-test]
+     Synchronizing Cookbooks:
+     [2013-10-25T22:05:22-07:00] INFO: Storing updated cookbooks/cookbook-test/recipes/default.rb in the cache.
+       - cookbook-test
+     Compiling Cookbooks...
+     Converging 3 resources
+     Recipe: cookbook-test::default
+       * group[system-admins] action create[2013-10-25T22:05:22-07:00] INFO: Processing group[system-admins] action create (cookbook-test::default line 9)
+      (up to date)
+       * user[sachin] action create[2013-10-25T22:05:22-07:00] INFO: Processing user[sachin] action create (cookbook-test::default line 13)
+      (up to date)
+    Recipe: cookbook-test::sendmail
+       * package[sendmail] action install[2013-10-25T22:05:22-07:00] INFO: Processing package[sendmail] action install (cookbook-test::sendmail line 1)
+     [2013-10-25T22:06:14-07:00] INFO: package[sendmail] installing sendmail-8.14.4-8.el6 from base repository
+
+         - install version 8.14.4-8.el6 of package sendmail
+
+     [2013-10-25T22:06:28-07:00] INFO: Chef Run complete in 66.492800835 seconds
+     [2013-10-25T22:06:28-07:00] INFO: Running report handlers
+     [2013-10-25T22:06:28-07:00] INFO: Report handlers complete
+     Chef Client finished, 1 resources updated
+
+7) Check the sendmail rpm is installed on the system.
+
+   # rpm -qa | grep -i send
+     sendmail-8.14.4-8.el6.x86_64
+
+II) Now update the recipe to start the service after installing the sendmail package.
+1) Login to Workstation node which have knife configured.
+2) Edit the recipe file as per following rule:
+
+   # vim /usr/local/src/chef/cookbooks/cookbook-test/recipes/sendmail.rb
+     package 'sendmail' do
+        action :install
+     end
+
+     service 'sendmail' do
+        action [ :enable,:start ]
+     end
+
+3) To upload a cookbook (cookbook-test) use following command:
+
+   # knife upload cookbooks cookbook-test
+
+4) Now login to machine “node1.example.com” and run the following command and check the output of this command:
+
+   # chef-client
+     Recipe: system-users::sendmail
+       * package[sendmail] action install[2013-10-28T04:12:05-07:00] INFO: Processing package[sendmail] action install (system-users::sendmail line 1)
+      (up to date)
+       * service[sendmail] action enable[2013-10-28T04:12:10-07:00] INFO: Processing service[sendmail] action enable (system-users::sendmail line 5)
+      (up to date)
+       * service[sendmail] action start[2013-10-28T04:12:11-07:00] INFO: Processing service[sendmail] action start (system-users::sendmail line 5)
+     [2013-10-28T04:12:11-07:00] INFO: service[sendmail] started
+
+         - start service service[sendmail]
+
+
+NOTE: Please check the comment marked in red.
+
+III) Now update the recipe to delete the sendmail package.
+
+1) Login to Workstation node which have knife configured.
+2) Edit the recipe file as per following rule:
+
+   # vim /usr/local/src/chef/cookbooks/cookbook-test/recipes/sendmail.rb
+     package 'sendmail' do
+        action :remove
+     end
+
+3) To upload a cookbook (cookbook-test) use following command:
+
+   # knife upload cookbooks cookbook-test
+
+4) Now login to machine “node1.example.com” and run the following command and check the output of this command:
+
+   # chef-client
+     Recipe: system-users::sendmail
+       * package[sendmail] action remove[2013-10-28T04:16:59-07:00] INFO: Processing package[sendmail] action remove (system-users::sendmail line 1)
+     [2013-10-28T04:17:09-07:00] INFO: package[sendmail] removed
+
+         - remove  package sendmail
